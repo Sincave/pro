@@ -1,0 +1,20 @@
+{
+  "name": "نظام نقطة البيع",
+  "short_name": "POS نظام",
+  "description": "نظام نقطة البيع المتكامل",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1e1b4b",
+  "theme_color": "#6366f1",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {"src": "icon.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon.png", "sizes": "512x512", "type": "image/png"}
+  ],
+  "shortcuts": [
+    {"name": "نقطة البيع", "url": "./index.html", "description": "فتح الكاشير"},
+    {"name": "التقارير", "url": "./index.html#reports", "description": "عرض التقارير"}
+  ]
+}
