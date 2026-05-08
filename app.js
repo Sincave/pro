@@ -1,5 +1,5 @@
 // ============================================================
-// app.js v4.0 - نظام POS الكامل
+// app.js v4.0 - نظام POS الكامل (مع تصحيح طباعة الهاتف)
 // ============================================================
 'use strict';
 
@@ -604,31 +604,30 @@ function showSuccessPopup(order) {
 }
 
 // ══════════════════════════════════════════════════════════
-// ── طباعة البون (شعار دائري + صفحة واحدة) ────────────────
+// ── طباعة البون (نسخة متوافقة مع الهواتف) ────────────────
 // ══════════════════════════════════════════════════════════
 function printBon(order) {
-  if(typeof order==='string') order=JSON.parse(order);
-  const shopName = State.settings.shop_name||'المحل';
-  const footer   = State.settings.receipt_footer||'شكراً لزيارتكم! 🌟';
-  const phone    = State.settings.shop_phone||'';
-  const address  = State.settings.shop_address||'';
-  const logo     = State.settings.logo_path||localStorage.getItem('pos_logo')||'';
-  const items    = order.items||[];
-  const payMap   = {cash:'💵 نقدي',card:'💳 بطاقة',transfer:'📱 تحويل',debt:'📝 دين'};
-  const typeMap  = {dine_in:'🍽️ داخل المحل',takeaway:'🛍️ خارج',delivery:'🛵 توصيل'};
+  if (typeof order === 'string') order = JSON.parse(order);
+  const shopName = State.settings.shop_name || 'المحل';
+  const footer = State.settings.receipt_footer || 'شكراً لزيارتكم! 🌟';
+  const phone = State.settings.shop_phone || '';
+  const address = State.settings.shop_address || '';
+  const logo = State.settings.logo_path || localStorage.getItem('pos_logo') || '';
+  const items = order.items || [];
+  const payMap = { cash: '💵 نقدي', card: '💳 بطاقة', transfer: '📱 تحويل', debt: '📝 دين' };
+  const typeMap = { dine_in: '🍽️ داخل المحل', takeaway: '🛍️ خارج', delivery: '🛵 توصيل' };
 
   const logoHtml = logo
     ? `<img src="${logo}" style="width:68px;height:68px;border-radius:50%;object-fit:cover;border:2.5px solid #6366f1;display:block;margin:0 auto 6px" onerror="this.style.display='none'">`
     : `<div style="width:60px;height:60px;border-radius:50%;background:#6366f1;color:white;font-size:22px;line-height:60px;text-align:center;margin:0 auto 6px">☕</div>`;
 
-  const html=`<!DOCTYPE html>
+  const htmlContent = `<!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head><meta charset="UTF-8"><title>بون - ${order.order_number}</title>
 <style>
   @page{size:80mm auto;margin:4mm}
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Courier New',monospace;font-size:12px;color:#000;background:#fff;width:72mm;margin:0 auto}
-  @media print{body{margin:0 auto}}
   .c{text-align:center}.b{font-weight:bold}.big{font-size:15px}.xl{font-size:18px}
   .d{border:none;border-top:1px dashed #000;margin:5px 0}
   .s{border:none;border-top:2px solid #000;margin:5px 0}
@@ -641,47 +640,87 @@ function printBon(order) {
 <body>
   <div class="c">${logoHtml}</div>
   <div class="c b big">${shopName}</div>
-  ${address?`<div class="c" style="font-size:10px">${address}</div>`:''}
-  ${phone?`<div class="c" style="font-size:10px">📞 ${phone}</div>`:''}
+  ${address ? `<div class="c" style="font-size:10px">${address}</div>` : ''}
+  ${phone ? `<div class="c" style="font-size:10px">📞 ${phone}</div>` : ''}
   <hr class="d">
   <table>
     <tr><td class="b">رقم الطلب:</td><td>${order.order_number}</td></tr>
-    <tr><td class="b">التاريخ:</td><td>${new Date(order.created_at||Date.now()).toLocaleString('ar-MA')}</td></tr>
-    <tr><td class="b">من طرف:</td><td>${order.cashier_name||'موظف'}</td></tr>
-    <tr><td class="b">زبون:</td><td>${order.customer_name||'زبون'}</td></tr>
-    <tr><td class="b">النوع:</td><td>${typeMap[order.order_type]||'-'}</td></tr>
+    <tr><td class="b">التاريخ:</td><td>${new Date(order.created_at || Date.now()).toLocaleString('ar-MA')}</td></tr>
+    <tr><td class="b">من طرف:</td><td>${order.cashier_name || 'موظف'}</td></tr>
+    <tr><td class="b">زبون:</td><td>${order.customer_name || 'زبون'}</td></tr>
+    <tr><td class="b">النوع:</td><td>${typeMap[order.order_type] || '-'}</td></tr>
   </table>
   <hr class="d">
   <table>
     <tr><td class="b" style="width:50%">الصنف</td><td class="b" style="text-align:center;width:12%">ك</td><td class="b" style="text-align:left;width:38%">الثمن</td></tr>
     <tr><td colspan="3"><hr class="d"></td></tr>
-    ${items.map(i=>`
+    ${items.map(i => `
     <tr>
-      <td>${i.product_name||i.name}</td>
+      <td>${i.product_name || i.name}</td>
       <td style="text-align:center">${i.quantity}</td>
-      <td style="text-align:left">${parseFloat(i.total_price||0).toFixed(2)}</td>
+      <td style="text-align:left">${parseFloat(i.total_price || 0).toFixed(2)}</td>
     </tr>
-    ${i.notes?`<tr><td colspan="3" style="font-size:10px;padding-right:8px">↳ ${i.notes}</td></tr>`:''}`).join('')}
+    ${i.notes ? `<tr><td colspan="3" style="font-size:10px;padding-right:8px">↳ ${i.notes}</td></tr>` : ''}`).join('')}
   </table>
   <hr class="s">
   <table>
-    ${parseFloat(order.discount_amount||0)>0?`<tr><td>الخصم:</td><td style="text-align:left">-${parseFloat(order.discount_amount).toFixed(2)} ${CURRENCY}</td></tr>`:''}
-    ${parseFloat(order.tax_amount||0)>0?`<tr><td>الضريبة:</td><td style="text-align:left">${parseFloat(order.tax_amount).toFixed(2)} ${CURRENCY}</td></tr>`:''}
-    <tr class="tl"><td>═ المجموع ═</td><td style="text-align:left" class="xl">${parseFloat(order.total||0).toFixed(2)} ${CURRENCY}</td></tr>
-    <tr><td>الدفع:</td><td style="text-align:left">${payMap[order.payment_method]||'-'}</td></tr>
-    ${parseFloat(order.change_amount||0)>0?`<tr><td>الباقي:</td><td style="text-align:left;font-weight:bold">${parseFloat(order.change_amount).toFixed(2)} ${CURRENCY}</td></tr>`:''}
+    ${parseFloat(order.discount_amount || 0) > 0 ? `<tr><td>الخصم:</td><td style="text-align:left">-${parseFloat(order.discount_amount).toFixed(2)} ${CURRENCY}</td></tr>` : ''}
+    ${parseFloat(order.tax_amount || 0) > 0 ? `<tr><td>الضريبة:</td><td style="text-align:left">${parseFloat(order.tax_amount).toFixed(2)} ${CURRENCY}</td></tr>` : ''}
+    <tr class="tl"><td>═ المجموع ═</td><td style="text-align:left" class="xl">${parseFloat(order.total || 0).toFixed(2)} ${CURRENCY}</td></tr>
+    <tr><td>الدفع:</td><td style="text-align:left">${payMap[order.payment_method] || '-'}</td></tr>
+    ${parseFloat(order.change_amount || 0) > 0 ? `<tr><td>الباقي:</td><td style="text-align:left;font-weight:bold">${parseFloat(order.change_amount).toFixed(2)} ${CURRENCY}</td></tr>` : ''}
   </table>
-  ${order.payment_method==='debt'?`<div class="dw">⚠️ هذا الطلب مسجل كدين ⚠️</div>`:''}
-  ${order.notes?`<div style="border:1px dashed #000;padding:4px;font-size:10px;margin:4px 0">📝 ${order.notes}</div>`:''}
+  ${order.payment_method === 'debt' ? `<div class="dw">⚠️ هذا الطلب مسجل كدين ⚠️</div>` : ''}
+  ${order.notes ? `<div style="border:1px dashed #000;padding:4px;font-size:10px;margin:4px 0">📝 ${order.notes}</div>` : ''}
   <hr class="d">
   <div class="c b" style="font-size:13px">${footer}</div>
-  <div style="height:20mm"></div>
-</body></html>`;
+</body>
+</html>`;
 
-  const w=window.open('','_blank','width=380,height=720,menubar=no,toolbar=no,scrollbars=no');
-  // add auto-print script inside the page for silent print
-  const printScript = '<scr'+'ipt>window.onload=function(){window.print();setTimeout(function(){window.close();},800);};<'+'/scr'+'ipt>';
-  w.document.write(html.replace('</body>', printScript+'</body>')); w.document.close();
+  // استخدام iframe مخفي للطباعة (متوافق مع الهواتف)
+  const oldFrame = document.getElementById('printIframe');
+  if (oldFrame) oldFrame.remove();
+  
+  const iframe = document.createElement('iframe');
+  iframe.id = 'printIframe';
+  iframe.style.position = 'absolute';
+  iframe.style.width = '0';
+  iframe.style.height = '0';
+  iframe.style.border = '0';
+  iframe.style.visibility = 'hidden';
+  
+  document.body.appendChild(iframe);
+  
+  const iframeDoc = iframe.contentWindow.document;
+  iframeDoc.open();
+  iframeDoc.write(htmlContent);
+  iframeDoc.close();
+  
+  iframe.onload = function() {
+    setTimeout(() => {
+      try {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+        setTimeout(() => {
+          const f = document.getElementById('printIframe');
+          if (f) f.remove();
+        }, 5000);
+      } catch (e) {
+        console.error('خطأ في الطباعة:', e);
+        toast('حدث خطأ في الطباعة، حاول مرة أخرى', 'error');
+        const f = document.getElementById('printIframe');
+        if (f) f.remove();
+      }
+    }, 200);
+  };
+  
+  setTimeout(() => {
+    if (document.getElementById('printIframe')) {
+      try {
+        iframe.contentWindow.print();
+      } catch(e) {}
+    }
+  }, 800);
 }
 
 function printQuickReceipt() {
@@ -924,7 +963,6 @@ function sendOWA(order) {
   if(typeof order==='string') order=JSON.parse(order);
   const items=(order.items||[]).map(i=>`• ${i.product_name||i.name} x${i.quantity} = ${parseFloat(i.total_price||0).toFixed(2)} ${CURRENCY}`).join('\n');
   const msg=`*${State.settings.shop_name||'المحل'}*\n────────────\n🧾 ${order.order_number}\n👤 ${order.customer_name||'زبون'}\n────────────\n${items}\n────────────\n💰 *${parseFloat(order.total||0).toFixed(2)} ${CURRENCY}*\n${State.settings.receipt_footer||'شكراً!'}`;
-  // إرسال للزبون وليس للمحل
   const custPhone = (order.customer_phone||'').replace(/[^0-9+]/g,'');
   const targetPhone = custPhone ? custPhone.replace(/\+/g,'') : WHATSAPP.replace(/[^0-9]/g,'');
   window.open('https://wa.me/'+targetPhone+'?text='+encodeURIComponent(msg));
@@ -1312,7 +1350,7 @@ function renderWeakDays(wd){
   if(!wd.length){sec.innerHTML='';return;}
   sec.innerHTML=`<div class="weak-section"><h3>📉 أضعف الأيام مبيعاً</h3>
     <table class="data-table"><thead><tr><th>التاريخ</th><th>الطلبات</th><th>الإيراد</th><th>التقييم</th></tr></thead>
-    <tbody>${wd.map(([d,v])=>`<tr><td>${d}</td><td>${v.orders}</td><td style="color:var(--danger);font-weight:700">${v.revenue.toFixed(2)} ${CURRENCY}</td><td><span style="background:#fee2e2;color:#991b1b;padding:2px 10px;border-radius:12px;font-size:.8rem">⚠️ ضعيف</span></td></tr>`).join('')}</tbody></table></div>`;
+    <tbody>${wd.map(([d,v])=>`<tr><td style="font-weight:600">${d}</td><td>${v.orders}</td><td style="color:var(--danger);font-weight:700">${v.revenue.toFixed(2)} ${CURRENCY}</td><td><span style="background:#fee2e2;color:#991b1b;padding:2px 10px;border-radius:12px;font-size:.8rem">⚠️ ضعيف</span></td>`).join('')}</tbody>}</div>`;
 }
 
 function renderMonthly(monthly){
@@ -1373,7 +1411,6 @@ function renderSettingsForm(){
 
 function saveSettings(){
   ['shop_name','shop_address','shop_phone','shop_whatsapp','currency','tax_rate','receipt_footer'].forEach(k=>{const el=document.getElementById('set_'+k);if(el)State.settings[k]=el.value;});
-  // كلمة السر لا تتغير إن كانت الخانة فارغة
   const spEl=document.getElementById('set_secret_password');
   if(spEl&&spEl.value.trim()) State.settings.secret_password=spEl.value.trim();
   localStorage.setItem('pos_settings',JSON.stringify(State.settings));
